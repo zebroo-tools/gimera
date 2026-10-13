@@ -1,3 +1,6 @@
+# 0.15.3
+
+  * [FIXED] Repository-Verweis in der Dokumentation nach dem Organisationsumzug auf zebroo-tools aktualisiert.
 # 0.15.2
 
   * [FIXED] a failed fetch no longer leaves the cache remote on the https fallback url; the cache origin is reset to the url from gimera.yml before fetching
