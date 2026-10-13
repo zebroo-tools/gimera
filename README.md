@@ -202,7 +202,7 @@ permissions: write-all
 
 jobs:
   deploy-subversions:
-    uses: Odoo-Ninjas/git-workflows/.github/workflows/deploy_to_subversions.yml@v1
+    uses: zebroo-tools/git-workflows/.github/workflows/deploy_to_subversions.yml@v1
     with:
       branches: "11.0 12.0 13.0 14.0 15.0 16.0"
 ```
