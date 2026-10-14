@@ -1,9 +1,10 @@
 # Selbst gehostete Tools-Runner
 
 Die CI verwendet nach dem Organisationsumzug den isolierten Tools-Pool auf
-`githubrunner-hetzner`. Die Organisationsgruppe ist auf die 15 umgezogenen
+`githubrunner-hetzner`. Die Organisationsgruppe ist auf die 14 umgezogenen
 Tool-Repositories beschränkt. zSYNC behält seine sechs bestehenden Runner;
-damit sind alle 16 umgezogenen Repositories versorgt.
+damit sind alle 15 Repositories in zebroo-tools versorgt.
+`Odoo-Ninjas/zync-stable` gehört nicht zum neuen Pool.
 
 Linux-x64-Runner im neuen Pool tragen das eindeutige Label `zebroo-tools`.
 Gimera und zodoo verwenden für externe Fork-PRs weiterhin GitHub-hosted Runner.
