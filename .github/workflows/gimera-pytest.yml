@@ -1,3 +1,4 @@
+# Part of Zebroo GmbH. See LICENSE file for full copyright and licensing details (www.zebroo.de/license).
 name: CI
 
 on:
@@ -20,7 +21,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || 'zebroo-tools' }}
 
     # Nur PR-Laeufe duerfen sich gegenseitig abloesen — dort zaehlt schnelles
     # Feedback und ein ueberholter Lauf ist wertlos. Pushes auf main und
@@ -32,6 +33,20 @@ jobs:
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
+    - name: Isolate job home and tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        job_home=$(mktemp -d "$RUNNER_TEMP/tools-home.XXXXXX")
+        mkdir -p "$job_home/.local/bin" "$job_home/pipx" "$job_home/tmp" "$job_home/.docker"
+        {
+          echo "HOME=$job_home"
+          echo "PIPX_HOME=$job_home/pipx"
+          echo "PIPX_BIN_DIR=$job_home/.local/bin"
+          echo "TMPDIR=$job_home/tmp"
+          echo "DOCKER_CONFIG=$job_home/.docker"
+        } >> "$GITHUB_ENV"
+        echo "$job_home/.local/bin" >> "$GITHUB_PATH"
     - uses: actions/checkout@v7
     - name: Set up Python 3.10
       uses: actions/setup-python@v7
@@ -51,10 +66,24 @@ jobs:
         pytest -n auto
 
   check-changelog:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || 'zebroo-tools' }}
     if: github.event_name == 'pull_request'
 
     steps:
+    - name: Isolate job home and tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        job_home=$(mktemp -d "$RUNNER_TEMP/tools-home.XXXXXX")
+        mkdir -p "$job_home/.local/bin" "$job_home/pipx" "$job_home/tmp" "$job_home/.docker"
+        {
+          echo "HOME=$job_home"
+          echo "PIPX_HOME=$job_home/pipx"
+          echo "PIPX_BIN_DIR=$job_home/.local/bin"
+          echo "TMPDIR=$job_home/tmp"
+          echo "DOCKER_CONFIG=$job_home/.docker"
+        } >> "$GITHUB_ENV"
+        echo "$job_home/.local/bin" >> "$GITHUB_PATH"
     - uses: actions/checkout@v7
       with:
         fetch-depth: 0
@@ -76,7 +105,7 @@ jobs:
 
   release:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || 'zebroo-tools' }}
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     # Serialise releases — never run two at once, never cancel an in-flight release.
@@ -85,6 +114,20 @@ jobs:
       cancel-in-progress: false
 
     steps:
+    - name: Isolate job home and tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        job_home=$(mktemp -d "$RUNNER_TEMP/tools-home.XXXXXX")
+        mkdir -p "$job_home/.local/bin" "$job_home/pipx" "$job_home/tmp" "$job_home/.docker"
+        {
+          echo "HOME=$job_home"
+          echo "PIPX_HOME=$job_home/pipx"
+          echo "PIPX_BIN_DIR=$job_home/.local/bin"
+          echo "TMPDIR=$job_home/tmp"
+          echo "DOCKER_CONFIG=$job_home/.docker"
+        } >> "$GITHUB_ENV"
+        echo "$job_home/.local/bin" >> "$GITHUB_PATH"
     - uses: actions/checkout@v7
       with:
         fetch-depth: 0
