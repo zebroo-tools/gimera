@@ -187,3 +187,10 @@ def test_command_is_read_only(project, upstream):
     assert (project / "gimera.yml").read_bytes() == before
     assert _git(project.path, "status", "--porcelain") == ""
     assert not (project / "vendor").exists()
+
+
+def test_broken_gimera_yml_gives_message(project):
+    (project / "gimera.yml").write_text("repos:\n- path: a\n<<<<<<< HEAD\n  sha: 1\n")
+    result = _run()
+    assert result.exit_code != 0
+    assert "gimera.yml cannot be parsed" in str(result.exception) + result.output

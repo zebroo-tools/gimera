@@ -469,9 +469,13 @@ def abort():
 @click.argument("repos", nargs=-1, default=None, shell_complete=_get_available_repos)
 def outdated(repos):
     from concurrent.futures import ThreadPoolExecutor
+    import yaml
     from . import outdated as od
 
-    config = Config()
+    try:
+        config = Config()
+    except yaml.YAMLError as ex:
+        _raise_error(f"gimera.yml cannot be parsed: {ex}")
     items = list(config.repos)
     if repos:
         wanted = [str(x).rstrip("/") for x in repos]
