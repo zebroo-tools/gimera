@@ -1,0 +1,1 @@
+new command `gimera outdated [repos...]`: shows for each repo in gimera.yml whether the pinned sha is behind the head of its branch (current / outdated / unknown, frozen and disabled repos marked as such); read-only via git ls-remote, exit code 1 if a pin is outdated, 2 if a repo could not be checked
