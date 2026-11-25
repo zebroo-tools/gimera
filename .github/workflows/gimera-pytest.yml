@@ -22,27 +22,38 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Oldest supported version (python_requires in setup.cfg) up to the
+    # newest one. fail-fast is off so one broken version does not hide the
+    # result of the others.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.10", "3.12", "3.14"]
+
     # Nur PR-Laeufe duerfen sich gegenseitig abloesen — dort zaehlt schnelles
     # Feedback und ein ueberholter Lauf ist wertlos. Pushes auf main und
     # manuelle Laeufe bekommen dagegen eine eigene Gruppe pro Run: ein Push auf
     # main fuehrt zum Release, der darf weder abgebrochen werden noch einen
     # bereits laufenden Release-Test abschiessen.
     concurrency:
-      group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+      group: ${{ github.workflow }}-${{ matrix.python-version }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
     - uses: actions/checkout@v7
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
-        python-version: "3.10"
+        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest pytest-xdist click inquirer pyyaml
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # Install gimera itself, so python_requires and the pinned
+        # install_requires are checked on every version of the matrix.
+        pip install -e .
 
     - name: Test with pytest
       run: |
