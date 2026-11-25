@@ -166,6 +166,32 @@ gimera apply --update
 
 Latest versions are pulled and patches are applied.
 
+## Find outdated pins
+
+```bash
+gimera outdated            # all repos
+gimera outdated roles/docker_host
+```
+
+Shows for each repo the branch, the pinned sha, the head of the branch on the
+remote and a status:
+
+  * `current` - the pinned sha is the branch head
+  * `outdated` - the branch has moved on; `gimera apply --update <repo>` bumps the pin
+  * `unknown` - the remote did not answer, the branch does not exist there or
+    no sha is pinned; the reason is printed behind the status
+  * `frozen` - `freeze_sha: true`, never counted as outdated
+  * `disabled` - `enabled: false`, not checked
+
+The command only asks the remote (`git ls-remote`). It does not fetch, does
+not touch the golden cache, the working tree or gimera.yml. For a submodule
+without a `sha` in gimera.yml the gitlink of the parent repo is used.
+
+Exit code: `0` if all pins are current, `1` if at least one is outdated, `2`
+if nothing is outdated but a repo could not be checked. So it fits into a
+cron job or CI step. `GIMERA_LS_REMOTE_TIMEOUT` (seconds, default 30) limits
+how long one remote may take.
+
 ## Force Integrated or Submodule mode for repo and subrepositories
 
 Use Case: you have an integrated repository. Now you want to turn it into submodule,
@@ -267,6 +293,7 @@ The path can be overridden with `GIMERA_CONFIG`.
   * GIMERA_NO_CACHE=1 - no golden cache at all (like listing every repo in `no_cache`)
   * GIMERA_CONFIG=/path/to/config - use another file instead of ~/.gimera
   * GIMERA_FULL_CLONE=1 - cache the file contents of the whole history too (see below)
+  * GIMERA_LS_REMOTE_TIMEOUT=30 - seconds `gimera outdated` waits for one remote
 
 ## The golden cache holds no old file contents
 

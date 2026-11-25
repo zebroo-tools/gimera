@@ -458,6 +458,62 @@ def abort():
             )
 
 
+@cli.command(
+    help=(
+        "Show for each repo whether the pinned sha is behind the head of its "
+        "branch. Read-only: asks the remote via git ls-remote and changes "
+        "nothing. Exit code 1 if a pin is outdated, 2 if a repo could not be "
+        "checked, 0 if all pins are current."
+    )
+)
+@click.argument("repos", nargs=-1, default=None, shell_complete=_get_available_repos)
+def outdated(repos):
+    from concurrent.futures import ThreadPoolExecutor
+    import yaml
+    from . import outdated as od
+
+    try:
+        config = Config()
+    except yaml.YAMLError as ex:
+        _raise_error(f"gimera.yml cannot be parsed: {ex}")
+    items = list(config.repos)
+    if repos:
+        wanted = [str(x).rstrip("/") for x in repos]
+        unknown = [x for x in wanted if x not in [str(r.path) for r in items]]
+        if unknown:
+            _raise_error(f"Invalid path: {','.join(unknown)}")
+        items = [x for x in items if str(x.path) in wanted]
+
+    root = config.config_file.parent
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        states = list(pool.map(lambda r: od.check_repo(r, main_repo=root), items))
+
+    colors = {
+        od.CURRENT: "green",
+        od.OUTDATED: "red",
+        od.UNKNOWN: "yellow",
+        od.FROZEN: "cyan",
+        od.DISABLED: "cyan",
+    }
+    width = max([len(x.path) for x in states] + [4])
+    bwidth = max([len(x.branch) for x in states] + [6])
+    click.echo(
+        f"    {'path'.ljust(width)}  {'branch'.ljust(bwidth)}  "
+        f"{'pinned'.ljust(12)}  {'head'.ljust(12)}  status"
+    )
+    for state in states:
+        line = (
+            f"[{state.type[0].upper()}] {state.path.ljust(width)}  "
+            f"{state.branch.ljust(bwidth)}  "
+            f"{(state.pinned or '-')[:12].ljust(12)}  "
+            f"{(state.head or '-')[:12].ljust(12)}  {state.status}"
+        )
+        if state.reason:
+            line += f" ({state.reason})"
+        click.secho(line, fg=colors[state.status])
+    sys.exit(od.exit_code(states))
+
+
 @cli.command(help="Show status of all repos: type, branch and deviations from gimera.yml.")
 @click.argument("repo_path", required=False, default=None)
 def status(repo_path):
