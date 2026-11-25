@@ -114,6 +114,7 @@ def test_unreachable_remote_is_unknown_not_traceback(project, tmp_path, upstream
     assert result.exit_code == 2, result.output
     line = _line(result.output, "vendor/x")
     assert "unknown (" in line
+    assert "does not appear to be a git repository" in line
     assert "Traceback" not in result.output
 
 

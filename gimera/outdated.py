@@ -83,8 +83,16 @@ def ls_remote_head(url, branch):
     except OSError as ex:
         raise RemoteError(f"could not run git: {ex}")
     if proc.returncode:
+        # The first line carries the cause ("Permission denied", "Could not
+        # resolve hostname", "does not appear to be a git repository"); the
+        # rest is git's generic "make sure you have the correct access rights".
         lines = [x.strip() for x in (proc.stderr or "").splitlines() if x.strip()]
-        raise RemoteError(lines[-1] if lines else f"git ls-remote exited with {proc.returncode}")
+        if not lines:
+            raise RemoteError(f"git ls-remote exited with {proc.returncode}")
+        first = lines[0]
+        if first.startswith("fatal: "):
+            first = first[len("fatal: ") :]
+        raise RemoteError(first)
 
     found = {}
     for line in proc.stdout.splitlines():
