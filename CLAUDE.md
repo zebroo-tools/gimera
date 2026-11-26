@@ -37,4 +37,4 @@ Höchster Typ unter allen Fragmenten gewinnt für den Bump. Details in [changes/
 
 ## Tests
 
-`pytest -n auto` — laufen lokal und in CI auf ubuntu-latest mit Python 3.10.
+`pytest -n auto` — laufen lokal und in CI auf ubuntu-latest als Matrix von der Mindestversion (`python_requires` in setup.cfg) bis zur neuesten Python-Version (siehe `.github/workflows/gimera-pytest.yml`).

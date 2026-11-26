@@ -48,15 +48,19 @@ def snapshot_restore(root_dir, filter_paths, token=None):
     patches = root_dir / ".gimera" / "snapshots" / token
 
     for patchfile in patches.rglob("**/*.patch"):
+        # Not patchfile.stem: the patch of the root itself is named "..patch"
+        # (see _get_patch_filepath), and since Python 3.14 its stem is
+        # "..patch" instead of ".".
+        stem = patchfile.name[: -len(".patch")]
         relpath = safe_relative_to(patchfile.parent, root_dir)
-        relpath = Path("/".join(relpath.parts[3:])) / patchfile.stem
+        relpath = Path("/".join(relpath.parts[3:])) / stem
 
         assert all(
             str(x).startswith("/") for x in filter_paths
         ), "Only absolute paths please"
 
         if filter_paths and not [
-            (str(root_dir / relpath / patchfile.stem)).startswith(str(x))
+            (str(root_dir / relpath / stem)).startswith(str(x))
             for x in filter_paths
         ]:
             continue
